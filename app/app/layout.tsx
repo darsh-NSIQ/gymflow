@@ -8,12 +8,12 @@ import { HyperBackground } from '@/components/ui/hyper-background'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans relative">
+    <div className="min-h-dvh bg-background flex flex-col font-sans relative pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <HyperBackground />
       <Header />
-      <div className="flex flex-1 relative z-10">
+      <div className="flex flex-1 relative z-10 min-w-0">
         <DesktopSidebar />
-        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
+        <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto w-full overflow-x-hidden">
           {children}
         </main>
       </div>

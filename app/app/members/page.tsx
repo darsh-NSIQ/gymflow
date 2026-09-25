@@ -65,7 +65,7 @@ export default function MembersPage() {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `gymflow_members_${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `members_${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     showToast('Exported member list to CSV.')
   }
@@ -81,12 +81,12 @@ export default function MembersPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5 w-full sm:w-auto">
             <Download className="h-4 w-4" />
             <span>Export CSV</span>
           </Button>
-          <Button size="sm" onClick={() => setIsAddModalOpen(true)} className="gap-1.5 shadow-soft-sm">
+          <Button size="sm" onClick={() => setIsAddModalOpen(true)} className="gap-1.5 shadow-soft-sm w-full sm:w-auto">
             <UserPlus className="h-4 w-4" />
             <span>Register Member</span>
           </Button>
@@ -97,7 +97,7 @@ export default function MembersPage() {
       <Card className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -111,7 +111,7 @@ export default function MembersPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-card text-xs font-semibold"
+              className="w-full h-11 sm:h-10 px-3 rounded-md border border-input bg-card text-base sm:text-xs font-semibold"
             >
               <option value="all">All Member Statuses</option>
               <option value="active">Active</option>
@@ -127,7 +127,7 @@ export default function MembersPage() {
             <select
               value={trainerFilter}
               onChange={(e) => setTrainerFilter(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-card text-xs font-semibold"
+              className="w-full h-11 sm:h-10 px-3 rounded-md border border-input bg-card text-base sm:text-xs font-semibold"
             >
               <option value="all">All Assigned Trainers</option>
               {trainers.map((t) => (
@@ -197,15 +197,15 @@ export default function MembersPage() {
         {filteredMembers.map((m) => (
           <Card key={m.id} hoverable>
             <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
                   <img
                     src={m.photo_url || 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150'}
                     alt={m.full_name}
                     className="h-10 w-10 rounded-full object-cover border border-border"
                   />
-                  <div>
-                    <Link href={`/app/members/${m.id}`} className="font-bold text-sm text-foreground hover:underline block">
+                  <div className="min-w-0">
+                    <Link href={`/app/members/${m.id}`} className="font-bold text-sm text-foreground hover:underline block truncate">
                       {m.full_name}
                     </Link>
                     <span className="text-xs text-muted-foreground font-mono">{m.member_code}</span>

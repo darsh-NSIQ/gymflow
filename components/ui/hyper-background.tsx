@@ -14,6 +14,9 @@ export function HyperBackground() {
     let animationFrameId: number
     let width = (canvas.width = window.innerWidth)
     let height = (canvas.height = window.innerHeight)
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const isSmallScreen = width < 768
+    const isTouch = window.matchMedia('(hover: none)').matches
 
     const handleResize = () => {
       if (!canvas) return
@@ -29,13 +32,13 @@ export function HyperBackground() {
       mouse.x = e.clientX
       mouse.y = e.clientY
     }
-    window.addEventListener('mousemove', handleMouseMove)
+    if (!isTouch) window.addEventListener('mousemove', handleMouseMove)
 
     // Brand Matched Palette (Crimson Red #FF1E3D, Orange #FF6B00, Metallic White #FFFFFF, Obsidian)
     const colors = ['#FF1E3D', '#E51937', '#FF6B00', '#FFFFFF', '#FF3352', '#00E5FF']
 
     // 1. PARTICLES & CONSTELLATIONS
-    const particlesCount = Math.min(45, Math.floor(width / 30))
+    const particlesCount = isSmallScreen ? 14 : Math.min(45, Math.floor(width / 30))
     const particles: Array<{
       x: number
       y: number
@@ -74,7 +77,7 @@ export function HyperBackground() {
     }> = []
 
     const gearTypes: GearType[] = ['dumbbell', 'barbell', 'plate', 'kettlebell', 'dumbbell', 'plate']
-    const totalGearCount = Math.min(18, Math.max(8, Math.floor(width / 110)))
+    const totalGearCount = isSmallScreen ? 5 : Math.min(18, Math.max(8, Math.floor(width / 110)))
 
     for (let i = 0; i < totalGearCount; i++) {
       gearItems.push({
@@ -282,7 +285,7 @@ export function HyperBackground() {
       }
 
       ctx.globalAlpha = 1
-      animationFrameId = requestAnimationFrame(render)
+      if (!reduceMotion) animationFrameId = requestAnimationFrame(render)
     }
 
     render()

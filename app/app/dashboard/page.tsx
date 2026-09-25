@@ -1,33 +1,21 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Users,
-  UserCheck,
-  Clock,
-  AlertTriangle,
   CalendarCheck,
   DollarSign,
   TrendingUp,
-  Receipt,
-  Dumbbell,
   Plus,
   UserPlus,
   QrCode,
-  Zap,
   ArrowUpRight,
-  Filter,
-  Flame,
   ShieldAlert,
-  CheckCircle2,
-  Activity,
-  ArrowUp,
-  Sparkles,
-  MessageSquare,
   CreditCard,
-  Target,
+  Clock,
+  UserCheck,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,7 +24,8 @@ import { Dialog } from '@/components/ui/dialog'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { AddMemberAdvancedModal } from '@/components/ui/add-member-advanced-modal'
 import { useApp } from '@/lib/context'
-import { paiseToRupees, formatCurrency } from '@/lib/money'
+import { formatCurrency, rupeesToPaise } from '@/lib/money'
+import { getDaysRemaining } from '@/lib/dates'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -52,315 +41,247 @@ import {
   Cell,
 } from 'recharts'
 
-// Custom Recharts High-Tech Dark Glass Tooltips
-const CustomAreaTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#0D0F17]/95 backdrop-blur-xl border border-[#FF1E3D]/50 p-3.5 rounded-2xl shadow-[0_0_25px_rgba(255,30,61,0.25)] text-xs space-y-2 font-sans z-50">
-        <div className="flex items-center justify-between pb-1.5 border-b border-border/60">
-          <span className="font-extrabold text-white">{label} Financial Breakdown</span>
-          <span className="text-[10px] font-mono text-primary font-bold">LIVE METRIC</span>
+const PIE_COLORS = ['#FF1E3D', '#FF6B00', '#00E5FF', '#10B981', '#A78BFA', '#F59E0B']
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const selectCls =
+  'w-full h-11 sm:h-10 px-3 rounded-md border border-input bg-card text-base sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ring'
+
+type TooltipPayload = { name?: string; value?: number | string; color?: string; payload?: { color?: string } }
+
+const MoneyTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-card/95 backdrop-blur-xl border border-primary/40 p-3 rounded-xl shadow-soft-lg text-xs space-y-1.5">
+      <p className="font-extrabold text-foreground">{label}</p>
+      {payload.map((entry, i) => (
+        <div key={i} className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+            {entry.name}
+          </span>
+          <span className="font-mono font-bold text-foreground">{formatCurrency(Number(entry.value))}</span>
         </div>
-        {payload.map((entry: any, index: number) => (
-          <div key={`item-${index}`} className="flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: entry.color, color: entry.color }} />
-              <span className="text-slate-300 font-semibold">{entry.name}:</span>
-            </div>
-            <span className="font-mono font-extrabold text-white">
-              ₹{Number(entry.value).toLocaleString('en-IN')}
-            </span>
-          </div>
-        ))}
-      </div>
-    )
-  }
-  return null
+      ))}
+    </div>
+  )
 }
 
-const CustomBarTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]
-    return (
-      <div className="bg-[#0D0F17]/95 backdrop-blur-xl border border-[#FF1E3D]/50 px-4 py-2.5 rounded-2xl shadow-[0_0_25px_rgba(255,30,61,0.25)] text-xs font-sans z-50">
-        <div className="flex items-center gap-2">
-          <Flame className="h-4 w-4 text-[#FF1E3D] animate-pulse" />
-          <span className="font-extrabold text-white">{label} Slot Intensity</span>
-        </div>
-        <div className="mt-1 font-mono text-sm font-extrabold text-primary">
-          {data.value} Active Check-Ins
-        </div>
-      </div>
-    )
-  }
-  return null
-}
-
-const CustomPieTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]
-    return (
-      <div className="bg-[#0D0F17]/95 backdrop-blur-xl border border-[#FF1E3D]/50 px-4 py-2.5 rounded-2xl shadow-[0_0_25px_rgba(255,30,61,0.25)] text-xs font-sans z-50 flex items-center gap-2.5">
-        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: data.payload.color }} />
-        <span className="font-bold text-white">{data.name}:</span>
-        <span className="font-mono font-extrabold text-primary">{data.value}% Share</span>
-      </div>
-    )
-  }
-  return null
+const CountTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-card/95 backdrop-blur-xl border border-primary/40 px-3 py-2 rounded-xl shadow-soft-lg text-xs">
+      <p className="font-extrabold text-foreground">{label}</p>
+      <p className="font-mono font-bold text-primary mt-0.5">{payload[0].value} check-ins</p>
+    </div>
+  )
 }
 
 export default function OwnerDashboard() {
   const {
-    gym,
+    currentUser,
     members,
     memberships,
     attendance,
     payments,
     expenses,
     trainers,
-    addMember,
     recordPayment,
     recordAttendance,
     addExpense,
   } = useApp()
 
   const [activeModal, setActiveModal] = useState<string | null>(null)
-  const [newMemberName, setNewMemberName] = useState('')
-  const [newMemberPhone, setNewMemberPhone] = useState('')
-  const [newPayAmount, setNewPayAmount] = useState('2950')
-  const [newPayMember, setNewPayMember] = useState(members[0]?.id || 'mem_01')
+  const [newPayAmount, setNewPayAmount] = useState('')
+  const [newPayMember, setNewPayMember] = useState(members[0]?.id ?? '')
   const [attendanceInput, setAttendanceInput] = useState('')
-  const [newExpCategory, setNewExpCategory] = useState('Utilities')
-  const [newExpAmount, setNewExpAmount] = useState('1500')
-  const [chartPeriod, setChartPeriod] = useState<'6M' | '1Y'>('6M')
+  const [newExpCategory, setNewExpCategory] = useState('')
+  const [newExpAmount, setNewExpAmount] = useState('')
 
-  const totalMembersCount = members.filter((m) => m.status !== 'archived').length
+  const todayDateStr = new Date().toISOString().split('T')[0]
+
   const activeMembersCount = members.filter((m) => m.status === 'active').length
   const expiredMembersCount = members.filter((m) => m.status === 'expired').length
   const frozenMembersCount = members.filter((m) => m.status === 'frozen').length
+  const totalMembersCount = members.filter((m) => m.status !== 'archived').length
 
-  const todayDateStr = new Date().toISOString().split('T')[0]
-  const todayAttendanceCount = attendance.filter((a) => a.date === todayDateStr).length
-  const currentlyInsideCount = attendance.filter((a) => !a.check_out).length
+  const todayAttendance = attendance.filter((a) => a.date === todayDateStr)
+  const currentlyInsideCount = todayAttendance.filter((a) => !a.check_out).length
 
-  const monthlyRevenuePaise = payments.reduce((sum, p) => sum + p.paid_paise, 0)
-  const monthlyExpensesPaise = expenses.reduce((sum, e) => sum + e.amount_paise, 0)
-  const estimatedProfitPaise = monthlyRevenuePaise - monthlyExpensesPaise
-  const pendingPaymentsPaise = payments.reduce((sum, p) => sum + p.due_paise, 0)
+  const revenuePaise = payments.reduce((sum, p) => sum + p.paid_paise, 0)
+  const expensesPaise = expenses.reduce((sum, e) => sum + e.amount_paise, 0)
+  const netPaise = revenuePaise - expensesPaise
+  const duesPaise = payments.reduce((sum, p) => sum + p.due_paise, 0)
+  const activeTrainers = trainers.filter((t) => t.status === 'active').length
 
-  // Financial Growth Chart Data matching Crimson Red Theme
-  const revenueTrendData = [
-    { month: 'Apr', revenue: 210000, expenses: 110000 },
-    { month: 'May', revenue: 280000, expenses: 120000 },
-    { month: 'Jun', revenue: 340000, expenses: 135000 },
-    { month: 'Jul', revenue: 410000, expenses: 140000 },
-    { month: 'Aug', revenue: 450000, expenses: 130000 },
-    { month: 'Sep', revenue: 485000, expenses: 119500 },
-  ]
+  // Last 6 months: collections vs expenses, from real records
+  const monthlyTrend = useMemo(() => {
+    const now = new Date()
+    const buckets: { key: string; month: string; revenue: number; expenses: number }[] = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      buckets.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, month: MONTH_LABELS[d.getMonth()], revenue: 0, expenses: 0 })
+    }
+    const byKey = new Map(buckets.map((b) => [b.key, b]))
+    payments.forEach((p) => {
+      const b = byKey.get(p.payment_date.slice(0, 7))
+      if (b) b.revenue += p.paid_paise / 100
+    })
+    expenses.forEach((e) => {
+      const b = byKey.get(e.date.slice(0, 7))
+      if (b) b.expenses += e.amount_paise / 100
+    })
+    return buckets
+  }, [payments, expenses])
 
-  const attendanceTrendData = [
-    { hour: '06 AM', count: 28 },
-    { hour: '07 AM', count: 54 },
-    { hour: '08 AM', count: 62 },
-    { hour: '09 AM', count: 35 },
-    { hour: '05 PM', count: 46 },
-    { hour: '06 PM', count: 78 },
-    { hour: '07 PM', count: 68 },
-    { hour: '08 PM', count: 40 },
-  ]
+  // Check-ins by hour (today, falling back to all records when today is empty)
+  const hourly = useMemo(() => {
+    const source = todayAttendance.length > 0 ? todayAttendance : attendance
+    const counts = new Map<number, number>()
+    source.forEach((a) => {
+      const h = Number(a.check_in.split('T')[1]?.slice(0, 2))
+      if (!Number.isNaN(h)) counts.set(h, (counts.get(h) || 0) + 1)
+    })
+    const rows = Array.from(counts.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([h, count]) => ({ hour: `${String(h).padStart(2, '0')}:00`, count }))
+    const peak = rows.reduce<{ hour: string; count: number } | null>((best, r) => (!best || r.count > best.count ? r : best), null)
+    return { rows, peak, isToday: todayAttendance.length > 0 }
+  }, [attendance, todayAttendance])
 
-  const membershipPieData = [
-    { name: 'VIP Annual', value: 45, color: '#FF1E3D' },
-    { name: 'Quarterly Beast', value: 30, color: '#FF6B00' },
-    { name: 'Monthly Standard', value: 15, color: '#00E5FF' },
-    { name: 'Personal Training', value: 10, color: '#10B981' },
-  ]
+  // Plan split from real memberships
+  const planSplit = useMemo(() => {
+    const counts = new Map<string, number>()
+    memberships.forEach((ms) => counts.set(ms.plan_name, (counts.get(ms.plan_name) || 0) + 1))
+    const total = memberships.length || 1
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count], i) => ({ name, count, value: Math.round((count / total) * 100), color: PIE_COLORS[i % PIE_COLORS.length] }))
+  }, [memberships])
+
+  // Follow-ups: expiring within 7 days, expired, or carrying dues
+  const followUps = useMemo(() => {
+    const dueByMember = new Map<string, number>()
+    payments.forEach((p) => dueByMember.set(p.member_id, (dueByMember.get(p.member_id) || 0) + p.due_paise))
+    return members
+      .filter((m) => m.status !== 'archived')
+      .map((m) => {
+        const ms = memberships.find((x) => x.member_id === m.id)
+        const days = ms ? getDaysRemaining(ms.end_date) : null
+        const due = dueByMember.get(m.id) || 0
+        let reason = ''
+        if (m.status === 'expired' || (ms && ms.status === 'expired')) reason = 'Membership expired'
+        else if (days !== null && days <= 7) reason = days === 0 ? 'Expires today' : `Expires in ${days} day${days === 1 ? '' : 's'}`
+        else if (due > 0) reason = `${formatCurrency(due)} due`
+        return { m, reason, due }
+      })
+      .filter((x) => x.reason)
+      .slice(0, 6)
+  }, [members, memberships, payments])
+
+  const expiringSoon = memberships.filter((ms) => ms.status === 'active' && getDaysRemaining(ms.end_date) <= 7).length
 
   const kpiCards = [
-    {
-      title: 'Total Active Squad',
-      val: activeMembersCount,
-      sub: `${expiredMembersCount} Expired • ${frozenMembersCount} Frozen`,
-      badge: '+14.2%',
-      badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-      icon: Users,
-      glowColor: 'shadow-[0_0_20px_rgba(255,30,61,0.15)]',
-      borderAccent: 'border-l-4 border-l-[#FF1E3D]',
-    },
-    {
-      title: "Today's Live Check-Ins",
-      val: todayAttendanceCount,
-      sub: `${currentlyInsideCount} Currently on Floor`,
-      badge: 'Peak Rush',
-      badgeColor: 'text-primary bg-primary/10 border-primary/30',
-      icon: CalendarCheck,
-      glowColor: 'shadow-[0_0_20px_rgba(0,229,255,0.15)]',
-      borderAccent: 'border-l-4 border-l-[#00E5FF]',
-    },
-    {
-      title: 'Gross Monthly Revenue',
-      val: formatCurrency(monthlyRevenuePaise, '₹'),
-      sub: `${formatCurrency(pendingPaymentsPaise, '₹')} Due Payments`,
-      badge: '+18.5%',
-      badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-      icon: DollarSign,
-      glowColor: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]',
-      borderAccent: 'border-l-4 border-l-emerald-500',
-    },
-    {
-      title: 'Net Profit Margin',
-      val: formatCurrency(estimatedProfitPaise, '₹'),
-      sub: `Expenses: ${formatCurrency(monthlyExpensesPaise, '₹')}`,
-      badge: '75.4% Margin',
-      badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-      icon: TrendingUp,
-      glowColor: 'shadow-[0_0_20px_rgba(255,107,0,0.15)]',
-      borderAccent: 'border-l-4 border-l-[#FF6B00]',
-      highlight: true,
-    },
+    { title: 'Active members', val: activeMembersCount, sub: `${expiredMembersCount} expired · ${frozenMembersCount} frozen`, icon: Users, accent: 'border-l-primary' },
+    { title: "Today's check-ins", val: todayAttendance.length, sub: `${currentlyInsideCount} inside right now`, icon: CalendarCheck, accent: 'border-l-info-icon' },
+    { title: 'Collected', val: formatCurrency(revenuePaise), sub: `${formatCurrency(duesPaise)} still due`, icon: DollarSign, accent: 'border-l-success-icon' },
+    { title: 'Net after expenses', val: formatCurrency(netPaise), sub: `Expenses ${formatCurrency(expensesPaise)}`, icon: TrendingUp, accent: 'border-l-warning-icon', highlight: netPaise >= 0 },
   ]
 
-  return (
-    <div className="space-y-8 pb-12">
-      {/* AGGRESSIVE HERO COMMAND BANNER */}
-      <motion.div
-        initial={{ opacity: 0, y: -15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0D0F17] via-[#141722] to-[#0D0F17] border border-[#FF1E3D]/40 p-6 sm:p-8 shadow-[0_10px_35px_rgba(255,30,61,0.2)]"
-      >
-        {/* Background Glowing Orb */}
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#FF1E3D]/15 blur-3xl pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-[#00E5FF]/10 blur-3xl pointer-events-none" />
+  const closeModal = () => setActiveModal(null)
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF1E3D]/20 border border-[#FF1E3D]/50 text-[#FF1E3D] text-xs font-black uppercase tracking-widest animate-pulse">
-                <Flame className="h-3.5 w-3.5" />
-                POWER COMMAND CENTER
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-bold">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                Gym Floor Online
-              </span>
-            </div>
-            
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-              Welcome back, <span className="bg-gradient-to-r from-white via-slate-200 to-[#FF1E3D] bg-clip-text text-transparent">{gym.name} Owner</span>
+  return (
+    <div className="space-y-5 sm:space-y-8 pb-6">
+      {/* Welcome + quick actions */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card/90 border border-primary/30 p-4 sm:p-6 lg:p-8"
+      >
+        <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+          <div className="space-y-1.5 min-w-0 flex-1">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">
+              Welcome back, {currentUser.full_name.split(' ')[0]}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium">
-              Real-time analytics, member check-ins, financial command, and instant operational control.
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {todayAttendance.length} check-ins so far today · {expiringSoon} membership{expiringSoon === 1 ? '' : 's'} expiring this week
             </p>
           </div>
 
-          {/* Quick Action Button Bar */}
-          <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-            <Button
-              size="lg"
-              onClick={() => setActiveModal('add_member')}
-              className="brand-btn-gradient text-white font-extrabold gap-2 shadow-[0_0_20px_rgba(255,30,61,0.4)] hover:scale-105 transition-all duration-300"
-            >
-              <UserPlus className="h-4.5 w-4.5" />
-              <span>Add Member</span>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap xl:grid xl:grid-cols-2 2xl:flex items-center gap-2 shrink-0">
+            <Button onClick={() => setActiveModal('add_member')} className="brand-btn-gradient text-white font-bold gap-2 w-full sm:w-auto">
+              <UserPlus className="h-4 w-4" />
+              <span>Add member</span>
             </Button>
-            <Button
-              size="lg"
-              variant="soft"
-              onClick={() => setActiveModal('record_payment')}
-              className="bg-[#181B26] hover:bg-[#202534] text-white border border-[#FF1E3D]/30 font-extrabold gap-2 hover:scale-105 transition-all duration-300"
-            >
-              <CreditCard className="h-4.5 w-4.5 text-[#FF1E3D]" />
-              <span>Record Fee</span>
+            <Button variant="soft" onClick={() => setActiveModal('record_payment')} className="font-bold gap-2 w-full sm:w-auto">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span>Record fee</span>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => setActiveModal('mark_attendance')}
-              className="bg-transparent border-slate-700 hover:border-[#00E5FF] text-white font-extrabold gap-2 hover:scale-105 transition-all duration-300"
-            >
-              <QrCode className="h-4.5 w-4.5 text-[#00E5FF]" />
-              <span>Check-In</span>
+            <Button variant="outline" onClick={() => setActiveModal('mark_attendance')} className="font-bold gap-2 w-full sm:w-auto">
+              <QrCode className="h-4 w-4 text-info-icon" />
+              <span>Check-in</span>
             </Button>
-            <Button
-              size="lg"
-              variant="ghost"
-              onClick={() => setActiveModal('add_expense')}
-              className="text-slate-300 hover:text-white hover:bg-slate-800/60 font-bold gap-2"
-            >
-              <Plus className="h-4.5 w-4.5" />
+            <Button variant="ghost" onClick={() => setActiveModal('add_expense')} className="font-bold gap-2 w-full sm:w-auto border border-border sm:border-transparent">
+              <Plus className="h-4 w-4" />
               <span>Expense</span>
             </Button>
           </div>
         </div>
 
-        {/* Live Capacity Bar */}
-        <div className="mt-6 pt-5 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-bold">
+        <div className="relative z-10 mt-5 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#FF1E3D]/15 border border-[#FF1E3D]/30 flex items-center justify-center text-[#FF1E3D]">
-              <Activity className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-xl bg-primary-soft border border-primary/30 flex items-center justify-center text-primary shrink-0">
+              <ShieldAlert className="h-5 w-5" />
             </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Gym Capacity Load</span>
-              <span className="text-white text-sm font-extrabold font-mono">68% Capacity (68 / 100 Max)</span>
+            <div className="min-w-0">
+              <span className="text-muted-foreground block text-[11px] uppercase tracking-wider">Needs follow-up</span>
+              <span className="text-foreground text-sm font-extrabold">{followUps.length} member{followUps.length === 1 ? '' : 's'}</span>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#00E5FF]/15 border border-[#00E5FF]/30 flex items-center justify-center text-[#00E5FF]">
+            <div className="h-10 w-10 rounded-xl bg-info border border-info-text/20 flex items-center justify-center text-info-text shrink-0">
               <Clock className="h-5 w-5" />
             </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Peak Hour Alert</span>
-              <span className="text-white text-sm font-extrabold font-mono">06:00 PM - 08:00 PM Today</span>
+            <div className="min-w-0">
+              <span className="text-muted-foreground block text-[11px] uppercase tracking-wider">Peak hour {hourly.isToday ? 'today' : '(all time)'}</span>
+              <span className="text-foreground text-sm font-extrabold">{hourly.peak ? `${hourly.peak.hour} · ${hourly.peak.count} check-ins` : 'No data yet'}</span>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-xl bg-success border border-success-text/20 flex items-center justify-center text-success-text shrink-0">
+              <UserCheck className="h-5 w-5" />
             </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Staff Status</span>
-              <span className="text-white text-sm font-extrabold font-mono">4 Trainers & Reception Active</span>
+            <div className="min-w-0">
+              <span className="text-muted-foreground block text-[11px] uppercase tracking-wider">Trainers</span>
+              <span className="text-foreground text-sm font-extrabold">{activeTrainers} active</span>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* KPI CARDS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {kpiCards.map((kpi, idx) => {
           const Icon = kpi.icon
           return (
-            <motion.div
-              key={kpi.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: idx * 0.1 }}
-            >
-              <Card className={`h-full relative overflow-hidden bg-[#0D0F17]/90 border-slate-800 ${kpi.borderAccent} ${kpi.glowColor} hover:border-[#FF1E3D]/50 transition-all duration-300 group`}>
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{kpi.title}</span>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${kpi.badgeColor}`}>
-                      {kpi.badge}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 flex items-baseline justify-between">
-                    <span className={`text-3xl font-black tracking-tight font-mono ${kpi.highlight ? 'text-emerald-400' : 'text-white'}`}>
-                      {kpi.val}
-                    </span>
-                    <div className="h-9 w-9 rounded-xl bg-slate-900/80 border border-slate-700/60 flex items-center justify-center text-slate-300 group-hover:text-[#FF1E3D] group-hover:border-[#FF1E3D]/40 transition-colors">
-                      <Icon className="h-4.5 w-4.5" />
+            <motion.div key={kpi.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: idx * 0.07 }}>
+              <Card className={`h-full border-l-4 ${kpi.accent}`}>
+                <CardContent className="p-3.5 sm:p-5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase tracking-wider leading-tight">{kpi.title}</span>
+                    <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                      <Icon className="h-4 w-4" />
                     </div>
                   </div>
-
-                  <span className="text-xs font-semibold text-slate-400 block mt-2">
-                    {kpi.sub}
+                  <span className={`block mt-2 sm:mt-3 text-xl sm:text-3xl font-black tracking-tight font-mono truncate ${kpi.highlight ? 'text-success-text' : 'text-foreground'}`}>
+                    {kpi.val}
                   </span>
+                  <span className="text-[11px] sm:text-xs font-semibold text-muted-foreground block mt-1 truncate">{kpi.sub}</span>
                 </CardContent>
               </Card>
             </motion.div>
@@ -368,354 +289,272 @@ export default function OwnerDashboard() {
         })}
       </div>
 
-      {/* FINANCIAL GROWTH AREA CHART & PLAN DISTRIBUTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Financial Area Chart */}
-        <Card className="lg:col-span-2 bg-[#0D0F17]/90 border-slate-800 shadow-xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-800/60">
+      {/* Trend + plan split */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="lg:col-span-2 min-w-0">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 sm:p-6 pb-2 sm:pb-2 border-b border-border/60">
             <div>
-              <CardTitle className="text-lg font-black text-white flex items-center gap-2">
-                <span>Revenue & Profit Command Matrix</span>
-                <span className="h-2 w-2 rounded-full bg-[#FF1E3D] animate-ping" />
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-400">
-                Monthly revenue stream vs operating expenditures
-              </CardDescription>
+              <CardTitle className="text-base sm:text-lg font-black">Collections vs expenses</CardTitle>
+              <CardDescription className="text-xs">Last 6 months, from recorded payments and expenses</CardDescription>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-3 text-xs font-bold hidden sm:flex">
-                <span className="flex items-center gap-1.5 text-[#FF1E3D]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#FF1E3D] shadow-[0_0_8px_#FF1E3D]" /> Revenue
-                </span>
-                <span className="flex items-center gap-1.5 text-[#00E5FF]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" /> Expenses
-                </span>
-              </div>
+            <div className="flex items-center gap-3 text-xs font-bold">
+              <span className="flex items-center gap-1.5 text-primary"><span className="h-2.5 w-2.5 rounded-full bg-primary" /> Collected</span>
+              <span className="flex items-center gap-1.5 text-info-text"><span className="h-2.5 w-2.5 rounded-full bg-info-icon" /> Expenses</span>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="h-72 w-full">
+          <CardContent className="p-2 sm:p-6 pt-4 sm:pt-6">
+            <div className="h-56 sm:h-72 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueTrendData}>
+                <AreaChart data={monthlyTrend} margin={{ top: 5, right: 8, left: -12, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#FF1E3D" stopOpacity={0.5} />
-                      <stop offset="95%" stopColor="#FF1E3D" stopOpacity={0.0} />
+                      <stop offset="95%" stopColor="#FF1E3D" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#00E5FF" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#00E5FF" stopOpacity={0.0} />
+                      <stop offset="95%" stopColor="#00E5FF" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1E2333" vertical={false} />
-                  <XAxis dataKey="month" stroke="#64748B" fontSize={12} tickLine={false} />
-                  <YAxis stroke="#64748B" fontSize={12} tickLine={false} tickFormatter={(v) => `₹${v / 1000}k`} />
-                  <Tooltip
-                    content={<CustomAreaTooltip />}
-                    cursor={{ stroke: 'rgba(255, 30, 61, 0.4)', strokeWidth: 1.5, strokeDasharray: '4 4' }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    name="Gross Revenue"
-                    stroke="#FF1E3D"
-                    strokeWidth={3.5}
-                    fillOpacity={1}
-                    fill="url(#revenueGrad)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="expenses"
-                    name="Operating Expenses"
-                    stroke="#00E5FF"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#expenseGrad)"
-                  />
+                  <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#64748B" fontSize={11} tickLine={false} width={48} tickFormatter={(v) => (v >= 1000 ? `₹${Math.round(v / 1000)}k` : `₹${v}`)} />
+                  <Tooltip content={<MoneyTooltip />} cursor={{ stroke: 'rgba(255,30,61,0.4)', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
+                  <Area type="monotone" dataKey="revenue" name="Collected" stroke="#FF1E3D" strokeWidth={3} fill="url(#revenueGrad)" />
+                  <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#00E5FF" strokeWidth={2} fill="url(#expenseGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Plan Distribution Donut */}
-        <Card className="bg-[#0D0F17]/90 border-slate-800 shadow-xl flex flex-col justify-between">
-          <CardHeader className="border-b border-slate-800/60 pb-3">
-            <CardTitle className="text-lg font-black text-white">Membership Tier Split</CardTitle>
-            <CardDescription className="text-xs text-slate-400">Distribution across active plan packages</CardDescription>
+        <Card className="flex flex-col min-w-0">
+          <CardHeader className="border-b border-border/60 p-4 sm:p-6 pb-3 sm:pb-3">
+            <CardTitle className="text-base sm:text-lg font-black">Plan split</CardTitle>
+            <CardDescription className="text-xs">{memberships.length} memberships on record</CardDescription>
           </CardHeader>
-          <CardContent className="pt-4 flex flex-col items-center justify-center relative">
-            <div className="h-56 w-full relative flex items-center justify-center">
-              {/* Dynamic Center Badge */}
+          <CardContent className="p-4 sm:p-6 pt-4 flex flex-col items-center">
+            <div className="h-48 sm:h-56 w-full relative">
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                <span className="text-3xl font-black text-white font-mono leading-none">{totalMembersCount}</span>
-                <span className="text-[10px] font-black text-[#FF1E3D] uppercase tracking-widest mt-1">Total Members</span>
+                <span className="text-3xl font-black text-foreground font-mono leading-none">{totalMembersCount}</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">members</span>
               </div>
-
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={membershipPieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={88}
-                    paddingAngle={6}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {membershipPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Pie data={planSplit} cx="50%" cy="50%" innerRadius="62%" outerRadius="86%" paddingAngle={4} dataKey="count" stroke="none">
+                    {planSplit.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomPieTooltip />} />
+                  <Tooltip
+                    content={({ active, payload }) =>
+                      active && payload?.length ? (
+                        <div className="bg-card/95 border border-primary/40 px-3 py-2 rounded-xl text-xs shadow-soft-lg">
+                          <span className="font-bold text-foreground">{payload[0].name}: </span>
+                          <span className="font-mono font-bold text-primary">{payload[0].value}</span>
+                        </div>
+                      ) : null
+                    }
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-
-            {/* Legend Grid */}
-            <div className="grid grid-cols-2 gap-2.5 w-full pt-4 border-t border-slate-800/80">
-              {membershipPieData.map((item) => (
-                <div key={item.name} className="flex items-center gap-2 text-xs">
-                  <span className="h-2.5 w-2.5 rounded-full shrink-0 shadow-[0_0_6px_currentColor]" style={{ backgroundColor: item.color, color: item.color }} />
-                  <span className="text-slate-300 font-semibold truncate text-[11px]">{item.name}</span>
-                  <span className="font-mono font-black text-white ml-auto">{item.value}%</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 w-full pt-4 border-t border-border/80">
+              {planSplit.map((item) => (
+                <div key={item.name} className="flex items-center gap-2 text-xs min-w-0">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="text-muted-foreground font-semibold truncate">{item.name}</span>
+                  <span className="font-mono font-black text-foreground ml-auto shrink-0">{item.value}%</span>
                 </div>
               ))}
+              {planSplit.length === 0 && <p className="text-xs text-muted-foreground">No memberships yet.</p>}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* PEAK HOURS BAR CHART & ATTENTION REQUIRED LIST */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Peak Hours Bar Chart */}
-        <Card className="bg-[#0D0F17]/90 border-slate-800 shadow-xl">
-          <CardHeader className="pb-3 border-b border-slate-800/60">
-            <div className="flex items-center justify-between">
+      {/* Hourly + follow-ups */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="min-w-0">
+          <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-3 border-b border-border/60">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-lg font-black text-white flex items-center gap-2">
-                  <span>Gym Attendance Peak Intensity</span>
-                  <Flame className="h-4 w-4 text-[#FF1E3D]" />
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-400">Hourly check-in volume distribution today</CardDescription>
+                <CardTitle className="text-base sm:text-lg font-black">Check-ins by hour</CardTitle>
+                <CardDescription className="text-xs">{hourly.isToday ? 'Today' : 'All recorded days'}</CardDescription>
               </div>
-              <span className="text-xs font-black text-[#FF1E3D] bg-[#FF1E3D]/10 border border-[#FF1E3D]/30 px-3 py-1 rounded-full">
-                Peak: 06 PM (78 Check-Ins)
-              </span>
+              {hourly.peak && (
+                <span className="text-xs font-black text-primary bg-primary-soft border border-primary/30 px-3 py-1 rounded-full self-start sm:self-auto whitespace-nowrap">
+                  Peak {hourly.peak.hour} · {hourly.peak.count}
+                </span>
+              )}
             </div>
           </CardHeader>
-
-          <CardContent className="pt-4">
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={attendanceTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF1E3D" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#FF6B00" stopOpacity={0.8} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E2333" vertical={false} />
-                  <XAxis dataKey="hour" stroke="#64748B" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
-                  <Tooltip
-                    content={<CustomBarTooltip />}
-                    cursor={{ fill: 'rgba(255, 30, 61, 0.12)', rx: 8 }}
-                  />
-                  <Bar dataKey="count" name="Check-ins" fill="url(#barGrad)" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <CardContent className="p-2 sm:p-6 pt-4">
+            <div className="h-52 sm:h-64 w-full min-w-0">
+              {hourly.rows.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No check-ins recorded yet.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={hourly.rows} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF1E3D" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#FF6B00" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E2333" vertical={false} />
+                    <XAxis dataKey="hour" stroke="#64748B" fontSize={11} tickLine={false} />
+                    <YAxis stroke="#64748B" fontSize={11} tickLine={false} allowDecimals={false} />
+                    <Tooltip content={<CountTooltip />} cursor={{ fill: 'rgba(255,30,61,0.12)' }} />
+                    <Bar dataKey="count" name="Check-ins" fill="url(#barGrad)" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Attention Required List */}
-        <Card className="bg-[#0D0F17]/90 border-slate-800 shadow-xl">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/60">
-            <div>
-              <CardTitle className="text-lg font-black text-white flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5 text-[#FF1E3D]" />
-                <span>Attention Required & Follow-Ups</span>
+        <Card className="min-w-0">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6 pb-3 sm:pb-3 border-b border-border/60">
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-primary shrink-0" />
+                <span>Follow-ups</span>
               </CardTitle>
-              <CardDescription className="text-xs text-slate-400">Expiring memberships & action items</CardDescription>
+              <CardDescription className="text-xs">Expiring, expired or with dues</CardDescription>
             </div>
-            <Link href="/app/members">
-              <Button variant="ghost" size="sm" className="gap-1 text-xs font-bold text-[#FF1E3D] hover:text-[#FF1E3D] hover:bg-[#FF1E3D]/10">
-                <span>View All Squad</span>
+            <Link href="/app/members" className="shrink-0">
+              <Button variant="ghost" size="sm" className="gap-1 text-xs font-bold text-primary hover:text-primary hover:bg-primary-soft">
+                <span>All members</span>
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-3">
-              {members.slice(0, 4).map((m) => (
-                <motion.div
+          <CardContent className="p-4 sm:p-6 pt-4">
+            <div className="space-y-2.5">
+              {followUps.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">Nothing pending. All memberships are in good standing.</p>}
+              {followUps.map(({ m, reason }) => (
+                <Link
                   key={m.id}
-                  whileHover={{ scale: 1.01 }}
-                  className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-800 bg-[#141722]/80 hover:border-[#FF1E3D]/40 transition-colors"
+                  href={`/app/members/${m.id}`}
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-muted/30 hover:border-primary/40 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={m.photo_url || 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150'}
-                      alt={m.full_name}
-                      className="h-10 w-10 rounded-full object-cover border-2 border-[#FF1E3D]/40 shadow-[0_0_10px_rgba(255,30,61,0.2)]"
-                    />
-                    <div>
-                      <Link href={`/app/members/${m.id}`} className="font-extrabold text-xs text-white hover:text-[#FF1E3D] transition-colors block">
-                        {m.full_name}
-                      </Link>
-                      <span className="text-[11px] text-slate-400 block font-mono">
-                        {m.member_code} • {m.assigned_trainer_name || 'No Trainer'}
-                      </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img src={m.photo_url || '/logo.png'} alt={m.full_name} className="h-10 w-10 rounded-full object-cover border border-primary/30 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="font-extrabold text-xs text-foreground block truncate">{m.full_name}</span>
+                      <span className="text-[11px] text-muted-foreground block truncate">{reason}</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <StatusBadge status={m.status} />
-                    <span className="text-[10px] text-slate-400 block mt-1 font-semibold">Joined {m.joining_date}</span>
-                  </div>
-                </motion.div>
+                  <StatusBadge status={m.status} />
+                </Link>
               ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* QUICK ACTION MODALS */}
-      <AddMemberAdvancedModal
-        isOpen={activeModal === 'add_member'}
-        onClose={() => setActiveModal(null)}
-      />
+      {/* Quick-action dialogs */}
+      <AddMemberAdvancedModal isOpen={activeModal === 'add_member'} onClose={closeModal} />
 
       <Dialog
         isOpen={activeModal === 'record_payment'}
-        onClose={() => setActiveModal(null)}
-        title="Record Fee Payment & Issue GST Invoice"
-        description="Collect cash, UPI, or card payment from a member."
-      >
-        <div className="space-y-4 pt-2">
-          <div>
-            <label className="text-xs font-extrabold text-slate-300 mb-1 block uppercase tracking-wider">Select Member</label>
-            <select
-              value={newPayMember}
-              onChange={(e) => setNewPayMember(e.target.value)}
-              className="w-full h-11 px-3 rounded-xl border border-slate-700 bg-slate-900 text-white text-sm font-semibold"
+        onClose={closeModal}
+        title="Record fee payment"
+        description="An invoice is issued as soon as you save."
+        footer={
+          <>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={closeModal}>Cancel</Button>
+            <Button
+              className="w-full sm:w-auto"
+              disabled={!newPayMember || Number(newPayAmount) <= 0}
+              onClick={() => {
+                const selectedM = members.find((m) => m.id === newPayMember)
+                const paise = rupeesToPaise(Number(newPayAmount))
+                recordPayment({ member_id: newPayMember, member_name: selectedM?.full_name || 'Member', paid_paise: paise, final_paise: paise })
+                setNewPayAmount('')
+                closeModal()
+              }}
             >
+              Save &amp; issue invoice
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="dash-pay-member" className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wider">Member</label>
+            <select id="dash-pay-member" value={newPayMember} onChange={(e) => setNewPayMember(e.target.value)} className={selectCls}>
               {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.full_name} ({m.member_code})
-                </option>
+                <option key={m.id} value={m.id}>{m.full_name} ({m.member_code})</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="text-xs font-extrabold text-slate-300 mb-1 block uppercase tracking-wider">Amount Paid (₹)</label>
-            <Input
-              type="number"
-              value={newPayAmount}
-              onChange={(e) => setNewPayAmount(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white font-mono font-bold"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
-            <Button variant="outline" onClick={() => setActiveModal(null)} className="border-slate-700 text-white">Cancel</Button>
-            <Button
-              className="brand-btn-gradient text-white font-black"
-              onClick={() => {
-                const selectedM = members.find((m) => m.id === newPayMember)
-                const amtRupees = Number(newPayAmount) || 2950
-                const paise = amtRupees * 100
-                recordPayment({
-                  member_id: newPayMember,
-                  member_name: selectedM?.full_name || 'Member',
-                  paid_paise: paise,
-                  final_paise: paise,
-                })
-                setActiveModal(null)
-              }}
-            >
-              Generate Receipt
-            </Button>
+            <label htmlFor="dash-pay-amount" className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wider">Amount paid (₹)</label>
+            <Input id="dash-pay-amount" type="number" inputMode="decimal" min={0} value={newPayAmount} onChange={(e) => setNewPayAmount(e.target.value)} placeholder="0" className="font-mono font-bold" />
           </div>
         </div>
       </Dialog>
 
       <Dialog
         isOpen={activeModal === 'mark_attendance'}
-        onClose={() => setActiveModal(null)}
-        title="Reception Quick Floor Check-In"
-        description="Enter member code or mobile number to record gym attendance."
-      >
-        <div className="space-y-4 pt-2">
-          <div>
-            <label className="text-xs font-extrabold text-slate-300 mb-1 block uppercase tracking-wider">Member Code / Mobile</label>
-            <Input
-              value={attendanceInput}
-              onChange={(e) => setAttendanceInput(e.target.value)}
-              placeholder="e.g. TPFZ-M-0001 or 9825077777"
-              className="bg-slate-900 border-slate-700 text-white font-mono"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
-            <Button variant="outline" onClick={() => setActiveModal(null)} className="border-slate-700 text-white">Cancel</Button>
+        onClose={closeModal}
+        title="Quick check-in"
+        description="Enter member code or mobile number."
+        footer={
+          <>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={closeModal}>Cancel</Button>
             <Button
-              className="brand-btn-gradient text-white font-black"
+              className="w-full sm:w-auto"
+              disabled={!attendanceInput.trim()}
               onClick={() => {
-                if (attendanceInput) {
-                  recordAttendance(attendanceInput, 'member_code')
-                  setAttendanceInput('')
-                  setActiveModal(null)
-                }
+                recordAttendance(attendanceInput.trim(), 'member_code')
+                setAttendanceInput('')
+                closeModal()
               }}
             >
-              Record Check-In
+              Record check-in
             </Button>
-          </div>
+          </>
+        }
+      >
+        <div>
+          <label htmlFor="dash-att" className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wider">Member code / mobile</label>
+          <Input id="dash-att" value={attendanceInput} onChange={(e) => setAttendanceInput(e.target.value)} placeholder="TPFZ-M-0001 or 98250 00000" className="font-mono" autoFocus />
         </div>
       </Dialog>
 
       <Dialog
         isOpen={activeModal === 'add_expense'}
-        onClose={() => setActiveModal(null)}
-        title="Record Operating Gym Expense"
-        description="Track expenses for rent, electricity, equipment maintenance, etc."
-      >
-        <div className="space-y-4 pt-2">
-          <div>
-            <label className="text-xs font-extrabold text-slate-300 mb-1 block uppercase tracking-wider">Category</label>
-            <Input
-              value={newExpCategory}
-              onChange={(e) => setNewExpCategory(e.target.value)}
-              placeholder="Rent / Electricity / Repairs"
-              className="bg-slate-900 border-slate-700 text-white"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-extrabold text-slate-300 mb-1 block uppercase tracking-wider">Amount (₹)</label>
-            <Input
-              type="number"
-              value={newExpAmount}
-              onChange={(e) => setNewExpAmount(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white font-mono font-bold"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
-            <Button variant="outline" onClick={() => setActiveModal(null)} className="border-slate-700 text-white">Cancel</Button>
+        onClose={closeModal}
+        title="Add expense"
+        footer={
+          <>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={closeModal}>Cancel</Button>
             <Button
-              className="brand-btn-gradient text-white font-black"
+              className="w-full sm:w-auto"
+              disabled={!newExpCategory.trim() || Number(newExpAmount) <= 0}
               onClick={() => {
-                const amtRupees = Number(newExpAmount) || 1500
-                addExpense({
-                  category: newExpCategory,
-                  amount_paise: amtRupees * 100,
-                  vendor: 'Vendor',
-                })
-                setActiveModal(null)
+                addExpense({ category: newExpCategory.trim(), amount_paise: rupeesToPaise(Number(newExpAmount)), vendor: '' })
+                setNewExpCategory('')
+                setNewExpAmount('')
+                closeModal()
               }}
             >
-              Save Expense
+              Save expense
             </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="dash-exp-cat" className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wider">Category</label>
+            <Input id="dash-exp-cat" value={newExpCategory} onChange={(e) => setNewExpCategory(e.target.value)} placeholder="Rent, electricity, repairs…" />
+          </div>
+          <div>
+            <label htmlFor="dash-exp-amt" className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wider">Amount (₹)</label>
+            <Input id="dash-exp-amt" type="number" inputMode="decimal" min={0} value={newExpAmount} onChange={(e) => setNewExpAmount(e.target.value)} placeholder="0" className="font-mono font-bold" />
           </div>
         </div>
       </Dialog>

@@ -45,7 +45,7 @@ export default function AutomationsPage() {
     {
       category: '1. Membership Reminders',
       icon: Calendar,
-      color: 'border-red-500/30 text-red-500',
+      color: 'border-danger-icon/30 text-danger-text',
       items: [
         { trigger: 'membership_expires_30_days', label: 'Expiry in 30 Days', desc: 'Early renewal awareness alert' },
         { trigger: 'membership_expires_15_days', label: 'Expiry in 15 Days', desc: 'Mid-month renewal notification' },
@@ -58,7 +58,7 @@ export default function AutomationsPage() {
     {
       category: '2. Payment & Invoice Reminders',
       icon: DollarSign,
-      color: 'border-amber-500/30 text-amber-500',
+      color: 'border-warning-icon/30 text-warning-text',
       items: [
         { trigger: 'payment_due', label: 'Payment Due Date', desc: 'Subscription payment due today' },
         { trigger: 'payment_overdue', label: 'Payment Overdue', desc: 'Unpaid fee reminder after due date' },
@@ -68,7 +68,7 @@ export default function AutomationsPage() {
     {
       category: '3. Attendance & Inactivity Alerts',
       icon: AlertTriangle,
-      color: 'border-emerald-500/30 text-emerald-500',
+      color: 'border-success-icon/30 text-success-text',
       items: [
         { trigger: 'member_absent_3_days', label: '3 Days Absent', desc: 'Gentle check-in reminder' },
         { trigger: 'member_absent_7_days', label: '7 Days Absent', desc: 'Trainer follow-up alert' },
@@ -79,7 +79,7 @@ export default function AutomationsPage() {
     {
       category: '4. Workout & Diet Reminders',
       icon: Dumbbell,
-      color: 'border-indigo-500/30 text-indigo-500',
+      color: 'border-info-icon/30 text-info-text',
       items: [
         { trigger: 'workout_reminder', label: 'Daily Workout Plan', desc: 'Today exercise checklist alert' },
         { trigger: 'workout_plan_expired', label: 'Workout Plan Expired', desc: 'Trainer routine update due' },
@@ -90,7 +90,7 @@ export default function AutomationsPage() {
     {
       category: '5. Personal Training (PT)',
       icon: Zap,
-      color: 'border-purple-500/30 text-purple-500',
+      color: 'border-primary/30 text-primary',
       items: [
         { trigger: 'pt_session_reminder', label: 'PT Session Upcoming', desc: '1 hour before PT session' },
         { trigger: 'pt_session_followup', label: 'PT Follow-up', desc: 'Post session feedback' },
@@ -99,7 +99,7 @@ export default function AutomationsPage() {
     {
       category: '6. Progress & Body Measurements',
       icon: TrendingUp,
-      color: 'border-sky-500/30 text-sky-500',
+      color: 'border-info-icon/30 text-info-text',
       items: [
         { trigger: 'monthly_measurement_due', label: 'Monthly Measurement', desc: 'Weight & waist check-in' },
         { trigger: 'progress_photo_reminder', label: 'Progress Photo Due', desc: 'Before/after transformation update' },
@@ -108,7 +108,7 @@ export default function AutomationsPage() {
     {
       category: '7. Gym Equipment & Operations',
       icon: Wrench,
-      color: 'border-rose-500/30 text-rose-500',
+      color: 'border-danger-icon/30 text-danger-text',
       items: [
         { trigger: 'equipment_maintenance_due', label: 'Equipment Maintenance', desc: 'Machinery service alert' },
         { trigger: 'warranty_expiry', label: 'Warranty Expiry', desc: 'Equipment warranty ending' },
@@ -118,7 +118,7 @@ export default function AutomationsPage() {
     {
       category: '8. Celebrations & Campaigns',
       icon: Gift,
-      color: 'border-pink-500/30 text-pink-500',
+      color: 'border-primary/30 text-primary-softText',
       items: [
         { trigger: 'member_birthday', label: 'Member Birthday', desc: 'Automated birthday wish + gift pass' },
         { trigger: 'gym_anniversary', label: 'Gym Anniversary', desc: 'Special promo campaign' },
@@ -126,6 +126,8 @@ export default function AutomationsPage() {
       ],
     },
   ]
+
+  const triggerCount = reminderTypesCategories.reduce((n, c) => n + c.items.length, 0)
 
   const handleCreateRule = () => {
     if (!ruleName) return
@@ -139,47 +141,51 @@ export default function AutomationsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Automation & Reminder Engine</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Automations</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Configure automated WhatsApp, Email, SMS & In-App triggers for members and operations
+            Reminder rules that message members and staff over WhatsApp, email, SMS or in-app
           </p>
         </div>
 
         <Button
           size="sm"
           onClick={() => setIsBuilderOpen(true)}
-          className="brand-btn-gradient text-white gap-1.5 font-extrabold shadow-soft-md hover:scale-105 transition-transform"
+          className="brand-btn-gradient text-white gap-1.5 font-extrabold shadow-soft-md w-full sm:w-auto"
         >
           <Plus className="h-4 w-4" />
-          <span>Create Automation Rule</span>
+          <span>New rule</span>
         </Button>
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 border-b border-border pb-2">
+      <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0" role="tablist">
         <button
           onClick={() => setActiveTab('rules')}
-          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+          role="tab"
+          aria-selected={activeTab === 'rules'}
+          className={`px-4 min-h-[44px] rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
             activeTab === 'rules'
               ? 'brand-btn-gradient text-white shadow-soft-sm'
               : 'text-muted-foreground hover:bg-accent'
           }`}
         >
-          Active Rules ({automations.length})
+          Rules ({automations.length})
         </button>
         <button
           onClick={() => setActiveTab('types')}
-          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+          role="tab"
+          aria-selected={activeTab === 'types'}
+          className={`px-4 min-h-[44px] rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
             activeTab === 'types'
               ? 'brand-btn-gradient text-white shadow-soft-sm'
               : 'text-muted-foreground hover:bg-accent'
           }`}
         >
-          Supported Reminder Types (20+)
+          Trigger library ({triggerCount})
         </button>
       </div>
 
@@ -187,46 +193,45 @@ export default function AutomationsPage() {
       {activeTab === 'rules' && (
         <div className="space-y-4">
           {automations.map((rule) => (
-            <Card key={rule.id} className="p-6">
+            <Card key={rule.id} className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-base font-bold text-foreground">{rule.name}</h2>
+                <div className="space-y-2 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <h2 className="text-base font-bold text-foreground break-words">{rule.name}</h2>
                     <span className="text-[10px] font-extrabold uppercase px-3 py-1 rounded-full bg-primary/20 text-primary-softText border border-primary/40">
                       Channel: {rule.action_channel}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground font-mono">
+                  <p className="text-xs text-muted-foreground font-mono break-words">
                     WHEN <strong className="text-foreground">{rule.trigger}</strong> IF{' '}
                     <strong className="text-foreground">{rule.condition}</strong>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm" onClick={() => handleTestRule(rule)} className="text-xs gap-1 font-semibold">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => handleTestRule(rule)} className="text-xs gap-1 font-semibold flex-1 sm:flex-none">
                     <Send className="h-3.5 w-3.5 text-primary" />
                     <span>Test Rule</span>
                   </Button>
 
                   <button
+                    type="button"
+                    role="switch"
+                    aria-checked={rule.enabled}
                     onClick={() => toggleAutomation(rule.id)}
-                    className="cursor-pointer transition-transform hover:scale-105"
+                    className={`min-h-[40px] px-3.5 rounded-full text-xs font-extrabold border transition-colors ${
+                      rule.enabled
+                        ? 'bg-success text-success-text border-success-text/30'
+                        : 'bg-neutralBadge text-neutralBadge-text border-border'
+                    }`}
                   >
-                    {rule.enabled ? (
-                      <span className="text-xs font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3.5 py-1.5 rounded-full">
-                        ACTIVE
-                      </span>
-                    ) : (
-                      <span className="text-xs font-extrabold bg-slate-800 text-slate-400 border border-slate-700 px-3.5 py-1.5 rounded-full">
-                        DISABLED
-                      </span>
-                    )}
+                    {rule.enabled ? 'ON' : 'OFF'}
                   </button>
                 </div>
               </div>
 
               {/* Message Template Editor Box */}
-              <div className="mt-4 p-4 rounded-xl bg-card/90 text-xs font-mono text-foreground border border-border/80">
+              <div className="mt-4 p-3 sm:p-4 rounded-xl bg-card/90 text-xs font-mono text-foreground border border-border/80 break-words">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1.5">
                   Message Template:
                 </span>
@@ -243,15 +248,15 @@ export default function AutomationsPage() {
           <div className="p-4 rounded-2xl bg-primary/10 border border-primary/30 text-xs text-muted-foreground flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-primary shrink-0" />
             <span>
-              GymFlow supports <strong className="text-foreground">20+ automated reminder triggers</strong> across memberships, payments, attendance, workouts, nutrition, PT, equipment maintenance, and marketing campaigns.
+              <strong className="text-foreground">{triggerCount} triggers</strong> across memberships, payments, attendance, workouts, nutrition, PT, equipment and campaigns. Pick one to start a rule.
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {reminderTypesCategories.map((cat) => {
               const Icon = cat.icon
               return (
-                <Card key={cat.category} className="p-6">
+                <Card key={cat.category} className="p-4 sm:p-6">
                   <div className="flex items-center gap-3 pb-3 border-b border-border mb-4">
                     <div className={`p-2.5 rounded-xl border ${cat.color} bg-card`}>
                       <Icon className="h-5 w-5" />
@@ -263,9 +268,9 @@ export default function AutomationsPage() {
                     {cat.items.map((item) => (
                       <div
                         key={item.trigger}
-                        className="p-3 rounded-xl border border-border bg-card/60 flex items-center justify-between text-xs hover:border-primary/40 transition-colors"
+                        className="p-3 rounded-xl border border-border bg-card/60 flex items-center justify-between gap-2 text-xs hover:border-primary/40 transition-colors"
                       >
-                        <div>
+                        <div className="min-w-0">
                           <span className="font-bold text-foreground block">{item.label}</span>
                           <span className="text-[11px] text-muted-foreground">{item.desc}</span>
                         </div>
@@ -277,9 +282,9 @@ export default function AutomationsPage() {
                             setRuleName(`Rule for ${item.label}`)
                             setIsBuilderOpen(true)
                           }}
-                          className="text-[11px] font-bold text-primary hover:text-primary hover:bg-primary/20"
+                          className="text-[11px] font-bold text-primary hover:text-primary hover:bg-primary/20 shrink-0"
                         >
-                          + Use Trigger
+                          Use
                         </Button>
                       </div>
                     ))}
@@ -295,25 +300,33 @@ export default function AutomationsPage() {
       <Dialog
         isOpen={isBuilderOpen}
         onClose={() => setIsBuilderOpen(false)}
-        title="Create Custom Automation Rule"
-        description="Configure trigger condition, action channel, and message variables."
+        title="New automation rule"
+        description="Trigger, condition, channel and message."
+        footer={
+          <>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
+            <Button className="brand-btn-gradient text-white font-extrabold w-full sm:w-auto" onClick={handleCreateRule} disabled={!ruleName}>
+              Save rule
+            </Button>
+          </>
+        }
       >
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-semibold mb-1 block">Rule Title *</label>
+            <label className="text-xs font-semibold mb-1 block">Rule name</label>
             <Input
               value={ruleName}
               onChange={(e) => setRuleName(e.target.value)}
-              placeholder="e.g. 7 Days Expiring WhatsApp Alert"
+              placeholder="e.g. 7-day expiry WhatsApp reminder"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold mb-1 block">WHEN Trigger</label>
+            <label className="text-xs font-semibold mb-1 block">When</label>
             <select
               value={selectedTrigger}
               onChange={(e) => setSelectedTrigger(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-card text-xs font-bold"
+              className="w-full h-11 sm:h-10 px-3 rounded-md border border-input bg-card text-base sm:text-xs font-bold"
             >
               {reminderTypesCategories.flatMap((c) =>
                 c.items.map((i) => (
@@ -326,42 +339,36 @@ export default function AutomationsPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold mb-1 block">CONDITION Expression</label>
+            <label className="text-xs font-semibold mb-1 block">Condition</label>
             <Input value={condition} onChange={(e) => setCondition(e.target.value)} />
           </div>
 
           <div>
-            <label className="text-xs font-semibold mb-1 block">THEN Action Channel</label>
+            <label className="text-xs font-semibold mb-1 block">Send via</label>
             <select
               value={channel}
-              onChange={(e) => setChannel(e.target.value as any)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-card text-xs font-bold"
+              onChange={(e) => setChannel(e.target.value as typeof channel)}
+              className="w-full h-11 sm:h-10 px-3 rounded-md border border-input bg-card text-base sm:text-xs font-bold"
             >
-              <option value="whatsapp">Send WhatsApp Message</option>
-              <option value="email">Send Email Receipt / Alert</option>
-              <option value="in_app">Push In-App System Notification</option>
-              <option value="sms">Send SMS Text</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="email">Email</option>
+              <option value="in_app">In-app notification</option>
+              <option value="sms">SMS</option>
             </select>
           </div>
 
           <div>
             <label className="text-xs font-semibold mb-1 block">
-              Message Template (Variables: {'{{member_name}}'}, {'{{expiry_date}}'}, {'{{amount_due}}'})
+              Message (variables: {'{{member_name}}'}, {'{{expiry_date}}'}, {'{{amount_due}}'})
             </label>
             <textarea
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
-              rows={3}
-              className="w-full p-3 rounded-md border border-input bg-card text-xs font-mono"
+              rows={4}
+              className="w-full p-3 rounded-md border border-input bg-card text-base sm:text-xs font-mono"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setIsBuilderOpen(false)}>Cancel</Button>
-            <Button className="brand-btn-gradient text-white font-extrabold" onClick={handleCreateRule}>
-              Save & Activate Rule
-            </Button>
-          </div>
         </div>
       </Dialog>
     </div>

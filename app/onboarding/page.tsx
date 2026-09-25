@@ -58,52 +58,61 @@ export default function OnboardingPage() {
       gst_registered: formData.gstRegistered,
       gstin: formData.gstin,
     })
-    showToast('Onboarding complete! Welcome to GymFlow.')
+    showToast(`Setup complete. Welcome to ${formData.gymName}.`)
     router.push('/app/dashboard')
   }
 
   return (
-    <div className="min-h-screen bg-background py-10 px-4 sm:px-6">
+    <div className="min-h-dvh bg-background py-6 sm:py-10 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto h-12 w-12 rounded-xl bg-primary-soft text-primary flex items-center justify-center mb-3">
             <Building className="h-6 w-6" />
           </div>
-          <h1 className="text-3xl font-extrabold text-foreground">First-Time Gym Setup Wizard</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">Gym setup</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure your gym workspace in 10 easy steps
+            Step {currentStep} of {steps.length} · {steps[currentStep - 1].title}
           </p>
         </div>
 
         {/* Step Indicator */}
-        <div className="mb-8 overflow-x-auto pb-2">
-          <div className="flex items-center justify-between min-w-[650px] px-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden sm:hidden" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={currentStep}>
+            <div className="h-full bg-primary transition-all" style={{ width: `${(currentStep / steps.length) * 100}%` }} />
+          </div>
+          <div className="hidden sm:flex items-center justify-between gap-1">
             {steps.map((s) => (
-              <div key={s.num} className="flex flex-col items-center">
+              <button
+                type="button"
+                key={s.num}
+                onClick={() => s.num < currentStep && setCurrentStep(s.num)}
+                className="flex flex-col items-center min-w-0 flex-1"
+                aria-current={currentStep === s.num ? 'step' : undefined}
+              >
                 <div
                   className={`h-9 w-9 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
                     currentStep === s.num
-                      ? 'bg-primary text-white ring-4 ring-primary/20 shadow-soft-sm'
+                      ? 'bg-primary text-white ring-4 ring-primary/20'
                       : currentStep > s.num
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-success text-success-text'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {currentStep > s.num ? <Check className="h-4 w-4" /> : s.num}
                 </div>
-                <span className="text-[10px] font-semibold text-muted-foreground mt-1">{s.title}</span>
-              </div>
+                <span className="text-[10px] font-semibold text-muted-foreground mt-1 truncate max-w-full">{s.title}</span>
+              </button>
             ))}
           </div>
         </div>
 
         {/* Step Card */}
-        <Card className="p-6 sm:p-8 shadow-soft-lg">
+        <Card className="p-4 sm:p-8 shadow-soft-lg">
           {currentStep === 1 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 1: Gym Business Name</h2>
-              <p className="text-xs text-muted-foreground">Enter the official trade name of your gym establishment.</p>
+              <h2 className="text-lg sm:text-xl font-bold">Gym name</h2>
+              <p className="text-xs text-muted-foreground">The name printed on invoices, member cards and the portal.</p>
               <div>
                 <label className="text-xs font-semibold mb-1 block">Gym Name</label>
                 <Input
@@ -117,19 +126,19 @@ export default function OnboardingPage() {
 
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 2: Upload Gym Logo</h2>
-              <p className="text-xs text-muted-foreground">This logo will appear on all member ID cards, receipts, and dashboards.</p>
-              <div className="flex items-center gap-4 p-4 border border-dashed border-border rounded-xl bg-muted/40">
-                <div className="h-16 w-16 rounded-xl bg-card border border-border p-2 flex items-center justify-center">
+              <h2 className="text-lg sm:text-xl font-bold">Logo</h2>
+              <p className="text-xs text-muted-foreground">Shown on member cards, receipts and the dashboard.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-dashed border-border rounded-xl bg-muted/40">
+                <div className="h-16 w-16 shrink-0 rounded-xl bg-card border border-border p-2 flex items-center justify-center">
                   <img src={formData.logoUrl} alt="Logo preview" className="h-full w-full object-contain" />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 flex-1 min-w-0">
                   <Input
                     value={formData.logoUrl}
                     onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                     placeholder="/logo.png or image URL"
                   />
-                  <span className="text-[11px] text-muted-foreground">Using uploaded logo: /logo.png</span>
+                  <span className="text-[11px] text-muted-foreground">Path or image URL</span>
                 </div>
               </div>
             </div>
@@ -137,7 +146,7 @@ export default function OnboardingPage() {
 
           {currentStep === 3 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 3: Gym Address & Location</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Address</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="text-xs font-semibold mb-1 block">Street Address</label>
@@ -166,7 +175,7 @@ export default function OnboardingPage() {
 
           {currentStep === 4 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 4: Official Contact Info</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Contact</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold mb-1 block">Phone Number</label>
@@ -188,7 +197,7 @@ export default function OnboardingPage() {
 
           {currentStep === 5 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 5: Operating Hours</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Opening hours</h2>
               <div>
                 <label className="text-xs font-semibold mb-1 block">Daily Timings</label>
                 <Input
@@ -201,7 +210,7 @@ export default function OnboardingPage() {
 
           {currentStep === 6 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 6: Currency & Tax Setup (GST)</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Currency &amp; GST</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold mb-1 block">Currency</label>
@@ -220,17 +229,19 @@ export default function OnboardingPage() {
 
           {currentStep === 7 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 7: Configure Membership Plans</h2>
+              <h2 className="text-lg sm:text-xl font-bold">First membership plan</h2>
               <div className="p-4 border border-border rounded-xl bg-muted/30 space-y-3">
                 <Input
                   value={formData.planName}
                   onChange={(e) => setFormData({ ...formData, planName: e.target.value })}
-                  placeholder="Plan Name"
+                  placeholder="Plan name"
                 />
                 <Input
+                  type="number"
+                  inputMode="numeric"
                   value={formData.planPrice}
                   onChange={(e) => setFormData({ ...formData, planPrice: e.target.value })}
-                  placeholder="Price in INR"
+                  placeholder="Price in ₹"
                 />
               </div>
             </div>
@@ -238,7 +249,7 @@ export default function OnboardingPage() {
 
           {currentStep === 8 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 8: Add First Trainer</h2>
+              <h2 className="text-lg sm:text-xl font-bold">First trainer</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold mb-1 block">Trainer Name</label>
@@ -260,16 +271,16 @@ export default function OnboardingPage() {
 
           {currentStep === 9 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Step 9: Notification Channels</h2>
-              <div className="space-y-2 text-xs font-medium">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked /> Enable In-App System Alerts
+              <h2 className="text-lg sm:text-xl font-bold">Reminders</h2>
+              <div className="space-y-1 text-sm font-medium">
+                <label className="flex items-center gap-3 min-h-[44px]">
+                  <input type="checkbox" className="h-5 w-5 accent-[#FF1E3D]" defaultChecked /> In-app alerts
                 </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked /> Enable WhatsApp Expiry Reminders
+                <label className="flex items-center gap-3 min-h-[44px]">
+                  <input type="checkbox" className="h-5 w-5 accent-[#FF1E3D]" defaultChecked /> WhatsApp expiry reminders
                 </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked /> Enable Payment Invoice Email Receipts
+                <label className="flex items-center gap-3 min-h-[44px]">
+                  <input type="checkbox" className="h-5 w-5 accent-[#FF1E3D]" defaultChecked /> Email invoice receipts
                 </label>
               </div>
             </div>
@@ -277,36 +288,36 @@ export default function OnboardingPage() {
 
           {currentStep === 10 && (
             <div className="space-y-4 text-center py-6">
-              <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="mx-auto h-16 w-16 rounded-full bg-success text-success-text flex items-center justify-center">
                 <CheckCircle className="h-10 w-10" />
               </div>
-              <h2 className="text-2xl font-extrabold">Setup Complete!</h2>
+              <h2 className="text-xl sm:text-2xl font-extrabold">All set</h2>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Your gym workspace for <strong className="text-foreground">{formData.gymName}</strong> is ready to launch.
+                <strong className="text-foreground">{formData.gymName}</strong> is ready. You can change any of this later in Settings.
               </p>
             </div>
           )}
 
           {/* Navigation controls */}
-          <div className="flex items-center justify-between pt-6 border-t border-border mt-8">
+          <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2 pt-5 border-t border-border mt-6 sm:mt-8">
             <Button
               variant="outline"
               onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
               disabled={currentStep === 1}
-              className="gap-1.5"
+              className="gap-1.5 w-full sm:w-auto"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
             </Button>
 
             {currentStep < 10 ? (
-              <Button onClick={() => setCurrentStep((prev) => prev + 1)} className="gap-1.5">
-                <span>Next Step</span>
+              <Button onClick={() => setCurrentStep((prev) => prev + 1)} className="gap-1.5 w-full sm:w-auto">
+                <span>Next</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={handleFinish} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
-                <span>Launch Gym Dashboard</span>
+              <Button onClick={handleFinish} className="gap-1.5 w-full sm:w-auto">
+                <span>Open dashboard</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             )}

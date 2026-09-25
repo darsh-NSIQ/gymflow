@@ -67,7 +67,7 @@ export const INITIAL_BRANCHES: Branch[] = [
 export const DEMO_USERS: UserProfile[] = [
   {
     id: 'user_owner',
-    email: 'owner@gymflow.com',
+    email: 'owner@powerfitnesszone.com',
     full_name: 'Rahul Sharma',
     phone: '+91 98250 11111',
     avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -77,7 +77,7 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user_manager',
-    email: 'manager@gymflow.com',
+    email: 'manager@powerfitnesszone.com',
     full_name: 'Vikram Patel',
     phone: '+91 98250 22222',
     avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
@@ -87,7 +87,7 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user_receptionist',
-    email: 'reception@gymflow.com',
+    email: 'reception@powerfitnesszone.com',
     full_name: 'Neha Gupta',
     phone: '+91 98250 33333',
     avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
@@ -97,7 +97,7 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user_trainer',
-    email: 'trainer@gymflow.com',
+    email: 'trainer@powerfitnesszone.com',
     full_name: 'Rajesh Kumar',
     phone: '+91 98250 44444',
     avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
@@ -107,7 +107,7 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user_nutritionist',
-    email: 'nutrition@gymflow.com',
+    email: 'nutrition@powerfitnesszone.com',
     full_name: 'Dr. Ananya Singh',
     phone: '+91 98250 55555',
     avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
@@ -117,7 +117,7 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user_accountant',
-    email: 'accountant@gymflow.com',
+    email: 'accountant@powerfitnesszone.com',
     full_name: 'Suresh Mehta',
     phone: '+91 98250 66666',
     avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
@@ -127,7 +127,7 @@ export const DEMO_USERS: UserProfile[] = [
   },
   {
     id: 'user_member',
-    email: 'member@gymflow.com',
+    email: 'member@powerfitnesszone.com',
     full_name: 'Amit Verma',
     phone: '+91 98250 77777',
     avatar_url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
@@ -148,7 +148,7 @@ export const INITIAL_MEMBERS: Member[] = [
     gender: 'male',
     dob: '1995-04-12',
     phone: '+91 98250 77777',
-    email: 'member@gymflow.com',
+    email: 'member@powerfitnesszone.com',
     address: '402 Sunrise Apartments, Satellite',
     emergency_name: 'Ramesh Verma',
     emergency_phone: '+91 98250 99999',
@@ -509,7 +509,7 @@ export const INITIAL_TRAINERS: Trainer[] = [
     name: 'Rajesh Kumar',
     photo_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
     phone: '+91 98250 44444',
-    email: 'trainer@gymflow.com',
+    email: 'trainer@powerfitnesszone.com',
     specialization: 'Hypertrophy & Strength Conditioning',
     experience_years: 7,
     joining_date: '2024-03-01',
@@ -525,7 +525,7 @@ export const INITIAL_TRAINERS: Trainer[] = [
     name: 'Sneha Shah',
     photo_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
     phone: '+91 98250 88888',
-    email: 'sneha.shah@gymflow.com',
+    email: 'sneha.shah@powerfitnesszone.com',
     specialization: 'CrossFit, Weight Loss & Pilates',
     experience_years: 5,
     joining_date: '2025-01-15',
@@ -541,7 +541,7 @@ export const INITIAL_TRAINERS: Trainer[] = [
     name: 'Karan Malhotra',
     photo_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
     phone: '+91 98250 99887',
-    email: 'karan.m@gymflow.com',
+    email: 'karan.m@powerfitnesszone.com',
     specialization: 'Calisthenics & Bodybuilding',
     experience_years: 6,
     joining_date: '2024-11-10',
@@ -640,7 +640,7 @@ export const INITIAL_WORKOUTS: WorkoutPlan[] = [
         ],
       },
       {
-        day: 'Saturday (Full Body Beast & Cardio)',
+        day: 'Saturday (Full Body & Cardio)',
         list: [
           { id: 'ex_15', name: 'Barbell Deadlift', muscle_group: 'Back', sets: 4, reps: '6', weight_kg: 100, rest_sec: 120 },
           { id: 'ex_16', name: 'Barbell Bench Press', muscle_group: 'Chest', sets: 3, reps: '10', weight_kg: 65, rest_sec: 90 },

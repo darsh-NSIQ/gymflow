@@ -1,11 +1,11 @@
 {
-  "name": "GymFlow SaaS",
-  "short_name": "GymFlow",
-  "description": "Commercial Gym Management SaaS Web App",
+  "name": "The Power Fitness Zone",
+  "short_name": "Power Fitness",
+  "description": "The Power Fitness Zone, Ahmedabad — member portal and gym staff app",
   "start_url": "/app/dashboard",
   "display": "standalone",
-  "background_color": "#F7F8FC",
-  "theme_color": "#6C5CE7",
+  "background_color": "#08090D",
+  "theme_color": "#08090D",
   "icons": [
     {
       "src": "/logo.png",

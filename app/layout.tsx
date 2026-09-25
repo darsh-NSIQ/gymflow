@@ -4,9 +4,9 @@ import { AppProvider } from '@/lib/context'
 import { ToastContainer } from '@/components/ui/toast'
 
 export const metadata: Metadata = {
-  title: 'GymFlow — Production Gym Management SaaS',
+  title: 'The Power Fitness Zone — Ahmedabad',
   description:
-    'Complete Gym Management SaaS Web App with Member Management, QR Attendance, Invoices, Workouts, Diets, and Multi-branch support.',
+    'Strength and cardio training, certified trainers, personal training and diet consultation across two branches in Ahmedabad. Member portal and staff sign-in.',
   manifest: '/manifest.json',
   icons: {
     icon: '/logo.png',
@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#6C5CE7',
+  themeColor: '#08090D',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-background text-foreground antialiased pb-16 md:pb-0">
+      <body className="min-h-dvh bg-background text-foreground antialiased">
         <AppProvider>
           {children}
           <ToastContainer />

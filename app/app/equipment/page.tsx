@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { Wrench, AlertTriangle, CheckCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { useApp } from '@/lib/context'
@@ -9,37 +8,42 @@ import { formatCurrency } from '@/lib/money'
 
 export default function EquipmentPage() {
   const { equipment } = useApp()
+  const needsAttention = equipment.filter((e) => e.status === 'maintenance' || e.status === 'broken').length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Equipment & Maintenance</h1>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Equipment</h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Track machinery condition, warranty expiry dates, and scheduled maintenance alerts
+          {equipment.length} machines on record · {needsAttention} need attention
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {equipment.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground">No equipment recorded yet.</Card>}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {equipment.map((eq) => (
           <Card key={eq.id} hoverable>
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2">
                 <StatusBadge status={eq.status} />
-                <span className="text-[11px] font-mono text-muted-foreground">{eq.location}</span>
+                <span className="text-[11px] font-mono text-muted-foreground truncate">{eq.location}</span>
               </div>
-              <h2 className="text-lg font-bold text-foreground">{eq.name}</h2>
-              <p className="text-xs text-muted-foreground">{eq.brand} • {eq.model}</p>
-              <div className="border-t border-border pt-3 text-xs space-y-1 text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>Purchase Price:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(eq.cost_paise, '₹')}</span>
+              <h2 className="text-base sm:text-lg font-bold text-foreground leading-snug">{eq.name}</h2>
+              <p className="text-xs text-muted-foreground">
+                {eq.brand} · {eq.model}
+              </p>
+              <div className="border-t border-border pt-3 text-xs space-y-1.5 text-muted-foreground">
+                <div className="flex justify-between gap-3">
+                  <span>Purchase price</span>
+                  <span className="font-bold text-foreground whitespace-nowrap">{formatCurrency(eq.cost_paise)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Warranty Expiry:</span>
+                <div className="flex justify-between gap-3">
+                  <span>Warranty till</span>
                   <span className="font-semibold text-foreground">{eq.warranty_expiry}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Next Maintenance:</span>
+                <div className="flex justify-between gap-3">
+                  <span>Next service</span>
                   <span className="font-bold text-primary">{eq.next_maintenance}</span>
                 </div>
               </div>

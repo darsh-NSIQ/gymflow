@@ -436,7 +436,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       branch_id: activeBranchId,
       name: trainerData.name || 'New Trainer',
       phone: trainerData.phone || '+91 99999 88888',
-      email: trainerData.email || 'trainer@gymflow.com',
+      email: trainerData.email || 'trainer@powerfitnesszone.com',
       specialization: trainerData.specialization || 'Fitness Trainer',
       experience_years: trainerData.experience_years || 3,
       joining_date: new Date().toISOString().split('T')[0],
