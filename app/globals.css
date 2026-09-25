@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Logo Matched Palette ("The Power Fitness Zone": Crimson Red #FF1E3D + Obsidian Black + Crisp Metallic White) */
+    --background: 228 24% 6%;    /* Deep Obsidian Black #08090D */
+    --foreground: 210 40% 98%;   /* Crisp White #F8FAFC */
+
+    --card: 228 20% 10%;         /* Dark Glass Slate #121520 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 228 20% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 351 100% 56%;     /* Brand Crimson Red #FF1E3D */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 351 100% 46%; /* Rich Crimson #E00024 */
+    --primary-soft: 351 80% 14%;
+    --primary-soft-text: 351 100% 75%;
+
+    --secondary: 228 15% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 228 15% 13%;
+    --muted-foreground: 215 18% 68%;
+
+    --accent: 351 50% 13%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 351 100% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 351 60% 15%;
+
+    --border: 228 15% 18%;       /* Border Slate #1E2333 */
+    --input: 228 15% 18%;
+    --ring: 351 100% 56%;
+
+    --radius: 14px;
+
+    /* High-Contrast Neon Semantic tokens */
+    --success-bg: 158 80% 9%;
+    --success-text: 150 100% 45%;
+    --success-icon: 150 100% 45%;
+
+    --warning-bg: 38 80% 10%;
+    --warning-text: 43 100% 50%;
+    --warning-icon: 43 100% 50%;
+
+    --danger-bg: 351 80% 12%;
+    --danger-text: 351 100% 65%;
+    --danger-icon: 351 100% 56%;
+
+    --info-bg: 200 80% 12%;
+    --info-text: 190 100% 50%;
+    --info-icon: 190 100% 50%;
+
+    --neutral-bg: 220 15% 16%;
+    --neutral-text: 215 18% 68%;
+  }
+
+  .dark {
+    --background: 228 24% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 228 20% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 228 20% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 351 100% 56%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 351 100% 46%;
+    --primary-soft: 351 80% 14%;
+    --primary-soft-text: 351 100% 75%;
+
+    --secondary: 228 15% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 228 15% 13%;
+    --muted-foreground: 215 18% 68%;
+
+    --accent: 351 50% 13%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 351 100% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 351 60% 15%;
+
+    --border: 228 15% 18%;
+    --input: 228 15% 18%;
+    --ring: 351 100% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-primary relative overflow-x-hidden;
+  }
+}
+
+/* Premium Brand-Matched Glassmorphism & High-End Effects */
+.glass-card {
+  background: rgba(18, 21, 32, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 30, 61, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 30, 61, 0.45);
+  box-shadow: 0 12px 35px -10px rgba(255, 30, 61, 0.22), 0 0 18px rgba(255, 30, 61, 0.12);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #FF1E3D 0%, #FF6B00 50%, #FFFFFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-btn-gradient {
+  background: linear-gradient(135deg, #FF1E3D 0%, #D91635 100%);
+  box-shadow: 0 4px 15px rgba(255, 30, 61, 0.35);
+}
+
+.brand-btn-gradient:hover {
+  background: linear-gradient(135deg, #FF3352 0%, #E51937 100%);
+  box-shadow: 0 6px 20px rgba(255, 30, 61, 0.55);
+}
+
+/* Scanner Laser Line Animation */
+@keyframes laserSweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 95%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  height: 3px;
+  background: #FF1E3D;
+  box-shadow: 0 0 15px #FF1E3D, 0 0 30px #FF1E3D;
+  animation: laserSweep 2.2s ease-in-out infinite;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #08090D;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 30, 61, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 30, 61, 0.7);
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
