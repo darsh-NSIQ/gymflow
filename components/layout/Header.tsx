@@ -41,7 +41,7 @@ export function Header() {
               />
             </div>
             <div>
-              <span className="font-extrabold text-[#FFFFFF] text-lg tracking-tight block group-hover:text-primary transition-colors">
+              <span className="font-extrabold text-[#FFFFFF] text-sm sm:text-lg max-w-[150px] sm:max-w-none truncate tracking-tight block group-hover:text-primary transition-colors">
                 {gym.name}
               </span>
             </div>

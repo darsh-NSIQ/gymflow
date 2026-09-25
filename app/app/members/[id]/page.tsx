@@ -133,12 +133,12 @@ export default function MemberProfilePage() {
               <span className="text-[10px] uppercase font-bold block opacity-80">Current Plan</span>
               <span className="text-sm font-extrabold block truncate">{currentMembership?.plan_name || 'No Active Plan'}</span>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center min-w-[100px]">
-              <span className="text-[10px] uppercase font-bold block opacity-80">Days Left</span>
+            <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-center min-w-[100px]">
+              <span className="text-[10px] uppercase font-extrabold block opacity-80">Days Left</span>
               <span className="text-sm font-extrabold block">{daysRemaining} Days</span>
             </div>
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-center min-w-[100px]">
-              <span className="text-[10px] uppercase font-bold block opacity-80">Check-Ins</span>
+            <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 text-center min-w-[100px]">
+              <span className="text-[10px] uppercase font-extrabold block opacity-80">Check-Ins</span>
               <span className="text-sm font-extrabold block">{memberAttendance.length} Visits</span>
             </div>
           </div>
